@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<title>Daily Expenses</title>
+<style>
+:root{--bg:#F4F4F2;--card:#fff;--ink:#111;--mute:#6A6A66;--line:#E1E1DD;--acc:#FF6A00;--accink:#111;--hero:#111;--heroink:#fff;--neg:#D32F2F;--pos:#B84700;--bar:#EAEAE6}
+@media(prefers-color-scheme:dark){:root{--bg:#0B0B0B;--card:#181818;--ink:#F5F5F3;--mute:#A3A3A0;--line:#2D2D2D;--acc:#FF7A1A;--accink:#111;--hero:#1F1F1F;--heroink:#fff;--neg:#FF6B5E;--pos:#FF9A4D;--bar:#2D2D2D}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom))}
+main{max-width:480px;margin:0 auto;padding:14px}
+section{display:none}section.on{display:block}
+.hero{background:var(--hero);color:var(--heroink);border-radius:20px;padding:22px 20px;margin-bottom:14px}
+.hero small{opacity:.85;font-size:14px}
+.big{font-size:52px;font-weight:700;letter-spacing:-1.5px;line-height:1.1;margin:4px 0 12px;color:var(--acc);font-variant-numeric:tabular-nums}
+.hero .row{display:flex;gap:20px;font-size:14px}.hero .row b{display:block;font-size:17px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+h2{font-size:15px;margin:0 0 10px}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+input,select,button{font:inherit;color:var(--ink)}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+button{border:0;border-radius:10px;padding:12px 16px;background:var(--acc);color:var(--accink);font-weight:600;width:100%;margin-top:12px}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.sm{width:auto;padding:6px 10px;margin:0;font-size:13px}
+.seg{display:flex;gap:6px}.seg button{margin:0;background:transparent;color:var(--ink);border:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}.item .m{color:var(--mute);font-size:13px}
+.amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.neg{color:var(--neg)}.pos{color:var(--pos)}
+.bar{height:8px;background:var(--bar);border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:var(--acc)}.bar i.over{background:var(--neg)}
+.x{background:none;border:0;color:var(--mute);width:auto;margin:0;padding:6px;font-size:18px}
+.dh{font-size:13px;color:var(--mute);margin:14px 0 2px}
+.empty{color:var(--mute);font-size:14px;padding:6px 0}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;margin:0;border-radius:0;background:transparent;color:var(--mute);padding:16px 0}
+nav button.on{color:var(--ink);box-shadow:inset 0 3px 0 var(--acc)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+</style></head><body><main>
+
+<section id="t-today" class="on">
+ <div class="hero"><small>You can spend today</small><div class="big" id="avail">₹0</div>
+  <div class="row"><div><small>Daily budget</small><b id="hb">–</b></div><div><small>Carried in</small><b id="hc">–</b></div><div><small>Spent today</small><b id="hs">–</b></div></div></div>
+ <div class="card"><h2 id="ft">Add entry</h2>
+  <div class="seg"><button id="k-out" class="on">Spent</button><button id="k-in">Received</button></div>
+  <label>Amount (₹)</label><input id="amt" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+  <div id="catw"><label>Category</label><select id="cat"></select></div>
+  <label>Note</label><input id="note" placeholder="What was it for?">
+  <label>Date</label><input id="date" type="date">
+  <button id="add">Add entry</button><button class="ghost" id="cancel" hidden>Cancel</button></div>
+ <div class="card"><h2>Today</h2><div id="tl"></div></div>
+</section>
+
+<section id="t-cats">
+ <div class="card"><h2>This month by category</h2><div id="cl"></div></div>
+ <div class="card"><h2>New category</h2>
+  <label>Name</label><input id="cn" placeholder="e.g. Travel">
+  <label>Monthly amount (₹)</label><input id="cm" type="number" inputmode="decimal" min="0" placeholder="1000">
+  <button id="cadd">Add category</button></div>
+</section>
+
+<section id="t-more">
+ <div class="card"><h2>Daily budget</h2>
+  <label>Amount per day (₹)</label><input id="bud" type="number" inputmode="decimal" min="0" placeholder="100">
+  <button id="bsave">Save budget</button>
+  <div class="m empty">A new amount applies from today. Past days keep their old budget.</div></div>
+ <div class="card"><h2>This month</h2><div class="two"><div><div class="m empty">Spent</div><div class="amt" id="ms">–</div></div><div><div class="m empty">Received</div><div class="amt" id="mi">–</div></div></div></div>
+ <div class="card"><h2>History</h2><div id="hl"></div></div>
+ <div class="card"><h2>Backup</h2>
+  <button id="exp">Download backup</button>
+  <button class="ghost" id="imp">Restore from backup</button><input id="file" type="file" accept=".json" hidden>
+  <div class="m empty">Your data stays on this phone. Download a backup now and then.</div></div>
+</section>
+</main>
+<nav><button data-t="today" class="on">Today</button><button data-t="cats">Categories</button><button data-t="more">More</button></nav>
+
+<script>
+const $=s=>document.querySelector(s),KEY='expense-tracker-v1';
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date()),mk=s=>new Date(s+'T00:00');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>(n<0?'-':'')+'₹'+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+let S={budgets:[],cats:[],tx:[]},kind='out',editId=null;
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert('Could not save. Storage may be full or blocked.')}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const budgetOn=d=>{let a=0;for(const b of S.budgets){if(b.date<=d)a=b.amt}return a};
+function allowedThrough(d){if(!S.budgets.length)return 0;let t=0,c=mk(S.budgets[0].date);const e=mk(d);while(c<=e){t+=budgetOn(iso(c));c.setDate(c.getDate()+1)}return t}
+const start=()=>S.budgets.length?S.budgets[0].date:null;
+const spentRange=(from,to)=>S.tx.filter(t=>t.type==='out'&&t.date>=from&&t.date<=to).reduce((a,t)=>a+t.amt,0);
+function dayBefore(d){const x=mk(d);x.setDate(x.getDate()-1);return iso(x)}
+
+function render(){
+ const t=today(),st=start();
+ if(st){const allow=allowedThrough(t),spentAll=spentRange(st,t),avail=allow-spentAll,sToday=spentRange(t,t),b=budgetOn(t);
+  $('#avail').textContent=fmt(avail);$('#avail').style.opacity=avail<0?.9:1;
+  $('#hb').textContent=fmt(b);$('#hc').textContent=fmt(avail+sToday-b);$('#hs').textContent=fmt(sToday)}
+ else{$('#avail').textContent='Set a budget';$('#hb').textContent=$('#hc').textContent=$('#hs').textContent='–'}
+ const opts=S.cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+ const cur=$('#cat').value;$('#cat').innerHTML='<option value="">No category</option>'+opts;$('#cat').value=cur;
+ const row=x=>{const c=S.cats.find(c=>c.id===x.cat);return `<div class="item"><div><div>${esc(x.note||(c?c.name:'No note'))}</div><div class="m">${c?esc(c.name)+' · ':''}${x.date}</div></div><div style="display:flex;align-items:center;gap:4px"><span class="amt ${x.type==='in'?'pos':''}">${x.type==='in'?'+':''}${fmt(x.amt)}</span><button class="ghost sm" data-ed="${x.id}">Edit</button><button class="x" data-del="${x.id}" aria-label="Delete entry">×</button></div></div>`};
+ const td=S.tx.filter(x=>x.date===t);$('#tl').innerHTML=td.length?td.map(row).join(''):'<div class="empty">Nothing yet today.</div>';
+ const mo=t.slice(0,7);
+ $('#cl').innerHTML=S.cats.length?S.cats.map(c=>{const sp=S.tx.filter(x=>x.type==='out'&&x.cat===c.id&&x.date.slice(0,7)===mo).reduce((a,x)=>a+x.amt,0),left=c.limit-sp,pct=c.limit?Math.min(100,sp/c.limit*100):0;
+  return `<div style="padding:10px 0;border-top:1px solid var(--line)"><div style="display:flex;justify-content:space-between"><b>${esc(c.name)}</b><span class="amt ${left<0?'neg':''}">${fmt(left)} left</span></div><div class="bar"><i class="${left<0?'over':''}" style="width:${pct}%"></i></div><div class="m" style="display:flex;justify-content:space-between"><span>${fmt(sp)} of ${fmt(c.limit)}</span><span><button class="ghost sm" data-edit="${c.id}">Edit</button> <button class="ghost sm" data-rm="${c.id}">Delete</button></span></div></div>`}).join(''):'<div class="empty">No categories yet. Add one below with a monthly amount.</div>';
+ $('#ms').textContent=fmt(S.tx.filter(x=>x.type==='out'&&x.date.slice(0,7)===mo).reduce((a,x)=>a+x.amt,0));
+ $('#mi').textContent=fmt(S.tx.filter(x=>x.type==='in'&&x.date.slice(0,7)===mo).reduce((a,x)=>a+x.amt,0));
+ const all=[...S.tx].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60);let h='',ld='';
+ for(const x of all){if(x.date!==ld){h+=`<div class="dh">${x.date}</div>`;ld=x.date}h+=row(x)}
+ $('#hl').innerHTML=h||'<div class="empty">No entries yet.</div>';
+ if(S.budgets.length&&document.activeElement!==$('#bud'))$('#bud').value=budgetOn(t);
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='t-'+b.dataset.t))});
+function setKind(k){kind=k;$('#k-out').classList.toggle('on',k==='out');$('#k-in').classList.toggle('on',k==='in');$('#catw').style.display=k==='out'?'':'none'}
+$('#k-out').onclick=()=>setKind('out');$('#k-in').onclick=()=>setKind('in');
+$('#date').value=today();
+function resetForm(){editId=null;$('#amt').value='';$('#note').value='';$('#date').value=today();$('#cat').value='';setKind('out');$('#add').textContent='Add entry';$('#ft').textContent='Add entry';$('#cancel').hidden=true}
+$('#add').onclick=()=>{const a=parseFloat($('#amt').value);if(!(a>0)){alert('Enter an amount greater than 0.');return}
+ const e={date:$('#date').value||today(),type:kind,amt:a,cat:kind==='out'?$('#cat').value:'',note:$('#note').value.trim()};
+ if(editId){Object.assign(S.tx.find(x=>x.id===editId),e)}else S.tx.push(Object.assign({id:uid()},e));
+ save();resetForm();render()};
+$('#cancel').onclick=resetForm;
+document.body.addEventListener('click',e=>{const d=e.target.dataset;
+ if(d.ed){const x=S.tx.find(x=>x.id===d.ed);editId=x.id;setKind(x.type);$('#amt').value=x.amt;$('#cat').value=x.cat;$('#note').value=x.note;$('#date').value=x.date;$('#add').textContent='Save changes';$('#ft').textContent='Edit entry';$('#cancel').hidden=false;document.querySelector('nav button[data-t=today]').click();window.scrollTo(0,0)}
+ if(d.del){if(confirm('Delete this entry?')){S.tx=S.tx.filter(x=>x.id!==d.del);if(editId===d.del)resetForm();save();render()}}
+ if(d.rm){if(confirm('Delete this category? Past entries stay, but lose the category.')){S.cats=S.cats.filter(c=>c.id!==d.rm);S.tx.forEach(x=>{if(x.cat===d.rm)x.cat=''});save();render()}}
+ if(d.edit){const c=S.cats.find(c=>c.id===d.edit),v=parseFloat(prompt('Monthly amount for '+c.name+' (₹)',c.limit));if(v>=0){c.limit=v;save();render()}}});
+$('#cadd').onclick=()=>{const n=$('#cn').value.trim(),m=parseFloat($('#cm').value);if(!n||!(m>=0)){alert('Enter a name and a monthly amount.');return}
+ S.cats.push({id:uid(),name:n,limit:m});$('#cn').value=$('#cm').value='';save();render()};
+$('#bsave').onclick=()=>{const v=parseFloat($('#bud').value);if(!(v>=0)){alert('Enter your daily budget.');return}
+ const t=today();S.budgets=S.budgets.filter(b=>b.date!==t||S.budgets.indexOf(b)===0);
+ if(S.budgets.length&&S.budgets[0].date===t)S.budgets[0].amt=v;else S.budgets.push({date:t,amt:v});save();render();document.querySelector('nav button[data-t=today]').click()};
+$('#exp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:'application/json'}));a.download='expenses-backup-'+today()+'.json';a.click()};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(!d.tx||!d.cats||!d.budgets)throw 0;if(confirm('Replace current data with this backup?')){S=d;save();render()}}catch(_){alert('That file is not a valid backup.')}})};
+// install icon + manifest, generated so no extra files are needed
+try{const c=document.createElement('canvas');c.width=c.height=192;const g=c.getContext('2d');g.fillStyle='#111111';g.fillRect(0,0,192,192);g.fillStyle='#FF6A00';g.font='bold 110px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText('₹',96,100);
+ const u=c.toDataURL('image/png');const l=document.createElement('link');l.rel='apple-touch-icon';l.href=u;document.head.appendChild(l);
+ const m=document.createElement('link');m.rel='manifest';m.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify({name:'Daily Expenses',short_name:'Expenses',display:'standalone',start_url:location.href.split('#')[0],background_color:'#111111',theme_color:'#111111',icons:[{src:u,sizes:'192x192',type:'image/png'}]}));document.head.appendChild(m)}catch(e){}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();
+</script></body></html>
